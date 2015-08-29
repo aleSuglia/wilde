@@ -28,6 +28,7 @@ The latest version of MongoDB has been used too and you can download it from the
 
 ## Configuration ##
 Here will be described the sequence of operations needed to run **wilde**.
+
 1. Create a MongoDB database with two different collections called: *terms* and *terms_trans*;
 2. Create a configuration file using the template file [wilde.json] (https://github.com/aleSuglia/wilde/blob/master/wilde.json);
 3. Run the command: `go install` within the wilde directory;
