@@ -27,6 +27,7 @@ func TestGetTerms(t *testing.T) {
 	t.Log("Correctly inserted all the terms")
 }
 
+/*
 func TestInsertTerms(t *testing.T) {
 	t.Logf("Translating %+v", terms)
 
@@ -49,3 +50,4 @@ func TestInsertTerms(t *testing.T) {
 	t.Log("Correctly inserted")
 
 }
+*/
