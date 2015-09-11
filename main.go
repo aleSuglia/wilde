@@ -11,18 +11,19 @@ import (
 )
 
 var (
-	termsList      string
+	terms          string
 	period         string
+	transTerm      string
 	topN           int
 	configFile     string
 	transInfoTempl = "\n%d)Term-info:%s\t%s\nTranslation:%s\n"
 )
 
 func init() {
-	flag.StringVar(&termsList, "says", "", "Stores information about new terms. Accept a string with terms delimited by comma or a single term")
+	flag.StringVar(&terms, "says", "", "Stores information about new terms. Accept a string with terms delimited by comma or a single term")
 	flag.IntVar(&topN, "top", 10, "Return topN most frequently used terms - default top 10")
 	flag.StringVar(&period, "stats", time.Now().Format(time.UnixDate), "Return statistics about terms in a specified period")
-	flag.String("trans", "", "Get all the translations for a specific keyword ordered by frequency")
+	flag.StringVar(&transTerm, "trans", "", "Get all the translations for a specific keyword ordered by frequency")
 	flag.StringVar(&configFile, "config", "", "Insert the path of the configuration file that wilde will use")
 
 }
@@ -86,13 +87,13 @@ func main() {
 
 	// Not enough parameters
 	if flag.NFlag() != 2 {
-		fmt.Println("Not enough parameters specified\n")
+		fmt.Printf("Not enough parameters specified\n\n")
 		flag.Usage()
 		return
 	}
 
 	if f := flag.Lookup("config"); f == nil {
-		fmt.Println("Configuration file not specified\n")
+		fmt.Printf("Configuration file not specified\n\n")
 		flag.Usage()
 		return
 	}
@@ -107,11 +108,11 @@ func main() {
 	flag.Visit(func(flag *flag.Flag) {
 		switch flag.Name {
 		case "says":
-			if termsList == "" {
+			if terms == "" {
 				return
 			}
 
-			dataTrans, err := GetAllTerms(arrayTerms(strings.Split(termsList, ",")), Configuration.FromLang, Configuration.ToLang)
+			dataTrans, err := GetAllTerms(arrayTerms(strings.Split(terms, ",")), Configuration.FromLang, Configuration.ToLang)
 
 			if err != nil {
 				fmt.Printf("%+v", err)
@@ -132,8 +133,18 @@ func main() {
 			fmt.Printf("%s\n", stats)
 
 		case "trans":
-			//trans := GetTranslations(flag.Value)
-			//fmt.Printf("%+v", trans)
+			if transTerm == "" {
+				return
+			}
+			trans, err := GetTranslations(transTerm)
+			if err != nil {
+				fmt.Printf("Geting Translations failed err:  %q\n", err.Error())
+				return
+			}
+			fmt.Printf("\nFor the term %q, translations are: \n\n", transTerm)
+			for i, t := range trans {
+				fmt.Printf("%d) %s\n", i, t.String())
+			}
 
 		case "config":
 			// NOP

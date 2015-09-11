@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	terms = []string{"dog", "milk", "dumb"}
+	termsTest = []string{"dog", "milk", "dumb"}
 )
 
 func init() {
@@ -18,9 +18,9 @@ func init() {
 }
 
 func TestGetTerms(t *testing.T) {
-	t.Logf("Translating %+v", terms)
+	t.Logf("Translating %+v", termsTest)
 
-	if _, err := GetAllTerms(terms, Configuration.FromLang, Configuration.ToLang); err != nil {
+	if _, err := GetAllTerms(termsTest, Configuration.FromLang, Configuration.ToLang); err != nil {
 		t.Fatalf("Unable to insert all terms %+v", err)
 	}
 
