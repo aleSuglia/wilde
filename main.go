@@ -5,22 +5,25 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"text/scanner"
 	"time"
 )
 
 var (
-	termsList  arrayTerms
-	period     string
-	topN       int
-	configFile string
+	terms          string
+	period         string
+	transTerm      string
+	topN           int
+	configFile     string
+	transInfoTempl = "\n%d)Term-info:%s\t%s\nTranslation:%s\n"
 )
 
 func init() {
-	flag.Var(&termsList, "says", "Stores information about new terms. Accept a string with terms delimited by comma or a single term")
+	flag.StringVar(&terms, "says", "", "Stores information about new terms. Accept a string with terms delimited by comma or a single term")
 	flag.IntVar(&topN, "top", 10, "Return topN most frequently used terms - default top 10")
 	flag.StringVar(&period, "stats", time.Now().Format(time.UnixDate), "Return statistics about terms in a specified period")
-	flag.String("trans", "", "Get all the translations for a specific keyword ordered by frequency")
+	flag.StringVar(&transTerm, "trans", "", "Get all the translations for a specific keyword ordered by frequency")
 	flag.StringVar(&configFile, "config", "", "Insert the path of the configuration file that wilde will use")
 
 }
@@ -36,9 +39,8 @@ func selectTranslation(termData []WRData) int64 {
 	}
 
 	index, err := strconv.ParseInt(scan.TokenText(), 10, 64)
-	if err != nil || index > int64(len(termData)) {
+	if err != nil || index > int64(len(termData))-1 {
 		return -1
-
 	}
 
 	return index
@@ -46,7 +48,7 @@ func selectTranslation(termData []WRData) int64 {
 
 func displayTranslations(data []WRData) {
 	for i, t := range data {
-		fmt.Printf(transInfoTemplate, i, t.TermUse, t.OtherInfo, t.Trans)
+		fmt.Printf(transInfoTempl, i, t.TermUse, t.OtherInfo, t.Trans)
 
 		if t.OrigLangExample != "" {
 			fmt.Printf("%s example: %s\n\n", t.FromLang, t.OrigLangExample)
@@ -68,7 +70,7 @@ func getSelectedTranslations(dataTrans map[string][]WRData) map[string]WRData {
 		transIndex := selectTranslation(data)
 
 		if transIndex == -1 {
-			fmt.Printf("Skipped translation")
+			fmt.Println("Skipped translation")
 			continue
 		}
 
@@ -106,7 +108,11 @@ func main() {
 	flag.Visit(func(flag *flag.Flag) {
 		switch flag.Name {
 		case "says":
-			dataTrans, err := GetAllTerms(termsList, Configuration.FromLang, Configuration.ToLang)
+			if terms == "" {
+				return
+			}
+
+			dataTrans, err := GetAllTerms(arrayTerms(strings.Split(terms, ",")), Configuration.FromLang, Configuration.ToLang)
 
 			if err != nil {
 				fmt.Printf("%+v", err)
@@ -118,21 +124,31 @@ func main() {
 			if err := InsertTermsTranslations(selData); err != nil {
 				panic(err)
 			}
-			break
+
 		case "top":
 			visualizeTop(GetTopTerms(topN))
-			break
+
 		case "stats":
 			stats := GetTermStatistics()
-			fmt.Printf("%s", stats)
-			break
+			fmt.Printf("%s\n", stats)
+
 		case "trans":
-			//trans := GetTranslations(flag.Value)
-			//fmt.Printf("%+v", trans)
-			break
+			if transTerm == "" {
+				return
+			}
+			trans, err := GetTranslations(transTerm)
+			if err != nil {
+				fmt.Printf("Geting Translations failed err:  %q\n", err.Error())
+				return
+			}
+			fmt.Printf("\nFor the term %q, translations are: \n\n", transTerm)
+			for i, t := range trans {
+				fmt.Printf("%d) %s\n", i, t.String())
+			}
+
 		case "config":
 			// NOP
-			break
+
 		default:
 			panic("Undefined operation")
 
